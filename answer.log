@@ -1,0 +1,25 @@
+condition 1 : {'kids': 3, 'food': 2, 'shop': 1, 'coaster': 2, 'flat': 2}
+max attraction: 12638 , with cost: 9963000
+condition 2 : {'kids': 3, 'food': 2, 'shop': 1, 'coaster': 3, 'flat': 1}
+max attraction: 13490 , with cost: 9983000
+condition 3 : {'kids': 2, 'food': 2, 'shop': 1, 'coaster': 2, 'flat': 3}
+max attraction: 13147 , with cost: 9959000
+condition 4 : {'kids': 2, 'food': 2, 'shop': 1, 'coaster': 3, 'flat': 2}
+max attraction: 14151 , with cost: 9984000
+
+
+
+answer for max attraction is condition 4
+{'kids': 2, 'food': 2, 'shop': 1, 'coaster': 3, 'flat': 2}
+                       name    theme     type     cost  est_cust
+63   Extreme Stomach-turner  extreme     flat   617000      1281
+371   Screaming Triple Flip   spooky     flat  1709000      1840
+195           Gravity Sushi    space     food   127000       163
+397     Dark Fried Potatoes   spooky     food   128000       160
+75     Black Hole Portraits    space     shop   126000       158
+54            Utter Coaster  extreme  coaster  3169000      3561
+259        Skeleton Coaster   spooky  coaster  3092000      3544
+417    Treasure Intimidator   pirate  coaster   767000      2343
+130           Scary Rotator   spooky     kids   149000       551
+193           Avast Dodgems   pirate     kids   100000       550
+[63, 371, 195, 397, 75, 54, 259, 417, 130, 193] guests: 14151 , totalcost: 9984000
