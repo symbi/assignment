@@ -4,14 +4,22 @@ import sys
 import pandas as pd
 
 costs, names, types, attractions, guests= None, None, None, None, None
-budget=10000000
-df=None
-dict_amount_cost_idx={} #type_amount_cost_combination
+budget=None
+df=None #raw data
+
+#dict{type: (amount,cost,list_combination_idx)} sort by amount descend
+dict_amount_cost_idx={}
+
+#dict{type: list_idx}
 dict_type_idx=collections.defaultdict(list)
 
-def readfile():
-	global costs, names, types, data, attractions, df, dict_type_idx
-	df = pd.read_csv("attractions.tsv", sep='\t')
+def readfile(path_of_file):
+	"""
+	read data from file
+	:param str path_of_file: relative file path
+	"""
+	global costs, names, types, attractions, df, dict_type_idx
+	df = pd.read_csv(path_of_file, sep='\t')
 	costs = list(df['cost'])
 	names = list(df['name'])
 	types = list(df['type'])
@@ -20,17 +28,31 @@ def readfile():
 	for i,t in enumerate(types):
 		dict_type_idx[t].append(i)
 
-#get subset of combinations
+
 def get_subset(arr,sidx,tmp,limit,n,res):
+	"""
+	get the subset combinations of list
+	:param list[int] arr: list to choose from
+	:param int sidx: start index
+	:param list[int] tmp: save choose
+	:param int limit: len of combination
+	:param int n: len of arr
+	:param list[List[int]] res: result of chose combinations
+	"""
 	if len(tmp)==limit:
 		res.append(tmp)
 		return
 	for i in range(sidx,n):
 		get_subset(arr,i+1,tmp+[arr[i]],limit,n,res)
 
-#create a dictionary for each type
-#sort by attraction amount with all the combinations
+
 def sort_amount_by_type(cd):
+	"""
+	filter out the one with more cost less attraction amount
+	create each type combination, sort by amount descend
+	save result to dict_amount_cost_idx
+	:param dict cd: the condition to calculate
+	"""
 	for k,lst_idx in dict_type_idx.items():
 		n=len(lst_idx)
 		lst_subset=[]
@@ -61,18 +83,28 @@ def sort_amount_by_type(cd):
 
 
 def reduce_to_budget():
-
-	limit=[]#len limit of each type
-	p = {'kids': 0, 'food': 0, 'shop': 0, 'coaster': 0, 'flat': 0}
+	"""
+	choose the maximum attraction amount
+	reduce cost below to budget
+	each type point goes down
+	:return: int max_amount: total attraction amount of choose
+	:return: int max_amount_cost: total cost of choose
+	:return dict p_ret: point record chose in combination list
+	:return: dict ret: chose index of each type
+	"""
+	limit=[]#each type combination length, the limit of point to choose
+	p={}#{type:int} point record next to chose in combination list
 	for k,lst in dict_amount_cost_idx.items():
 		limit.append(len(lst))
+		p[k]=0
 	max_amount_cost=sys.maxsize
-	p_ret=None
+	max_amount=0
+	p_ret=None#point record current chose in combination list
 	all_types=list(dict_amount_cost_idx.keys())
 
 	while max_amount_cost>budget:
-		cp=[]
-		ck=[]
+		cp=[]#point chose of each type
+		ck=[]#each type cost/amount
 		c_amount=0
 		c_cost=0
 		for k, lst in dict_amount_cost_idx.items():
@@ -101,18 +133,32 @@ def reduce_to_budget():
 
 
 def add_to_budget(p_old,totalamount,totalcost):
+	"""
+	add cost to budget
+	swap exist combination with larger amount attractions
+	each type point goes up
+	:param dict p_old: point record chose in combination list
+	:param int totalamount: Current total attraction amount
+	:return: int totalamount: total attraction amount after swap
+	:return: int totalcost: total cost after swap close to budget
+	:return: dict ret: chose index of each type
+	"""
+	#point to record next one to compare in combination list
+	p_new={}#{type:int}
+	#record whether the point is point to the first idx(no next one)
+	stop={}#{type:0}
 
-	p_new={}
 	for k,v in p_old.items():
 		p_new[k]=p_old[k]-1 if p_old[k]>=1 else 0
+		stop[k]=0
+
 
 	all_types=list(dict_amount_cost_idx.keys())
-	stop = {'kids': 0, 'food': 0, 'shop': 0, 'coaster':0 , 'flat': 0}
 
 	while True:
-		ck=[]
-		dif_cost=[]
-		dif_amount=[]
+		ck=[]#record each type combinations cost/amount
+		dif_cost=[]#differnt of cost between last choose and current choose
+		dif_amount=[]#differnt of amount between last choose and current choose
 		for k,lst in dict_amount_cost_idx.items():
 			i=p_new[k]
 			j=p_old[k]
@@ -127,7 +173,7 @@ def add_to_budget(p_old,totalamount,totalcost):
 			dif_cost.append(lst[i][1]-lst[j][1])
 			dif_amount.append(lst[i][0]-lst[j][0])
 		p_idx_to_move=ck.index(max(ck))
-		if sum(ck)==-5:break
+		if sum(ck)==-1*len(ck):break
 
 		if dif_cost[p_idx_to_move]+totalcost<=budget:
 			p_old[all_types[p_idx_to_move]]=p_new[all_types[p_idx_to_move]]
@@ -149,6 +195,10 @@ def add_to_budget(p_old,totalamount,totalcost):
 
 
 def get_attractions_from_ret(ret):
+	"""
+	get and print selected raw data
+	:param dict ret: the selected result
+	"""
 	select = []
 	attraction_num = 0
 	totalcost=0
@@ -159,7 +209,7 @@ def get_attractions_from_ret(ret):
 			totalcost+=costs[x]
 	print(df.iloc[select])
 	print(select, "guests:", attraction_num,", totalcost:",totalcost)
-	return attraction_num,totalcost
+
 
 if __name__ =="__main__":
 	# four conditions
@@ -168,7 +218,9 @@ if __name__ =="__main__":
 	cd3 = {'kids': 2, 'food': 2, 'shop': 1, 'coaster': 2, 'flat': 3}
 	cd4 = {'kids': 2, 'food': 2, 'shop': 1, 'coaster': 3, 'flat': 2}
 	#--prepare--
-	readfile()
+	budget = 10000000
+	path_of_file = "attractions.tsv"
+	readfile(path_of_file)
 	#-------
 	condition=[cd1,cd2,cd3,cd4]
 	amounts=[]
